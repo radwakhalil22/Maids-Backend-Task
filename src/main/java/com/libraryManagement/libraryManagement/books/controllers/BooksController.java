@@ -59,10 +59,10 @@ public class BooksController {
 //	@ApiOperation("get all books")
 	@GetMapping
 	public ResponseEntity<List<BookResModel>> getAllBooks(
-			@RequestParam Integer pageSize,
-			@RequestParam Integer pageIndex,
-			@RequestParam String sortField, 
-			@RequestParam String sortOrder) {
+			@RequestParam(defaultValue = "10",required = false)  Integer pageSize,
+			@RequestParam(defaultValue = "0",required = false)  Integer pageIndex,
+			@RequestParam(required = false) String sortField, 
+			@RequestParam(required = false) String sortOrder) {
 		return new ResponseEntity<>(booksService.getAllBooks(pageSize,pageIndex, sortField, sortOrder), 
 				HttpStatus.OK);
 		

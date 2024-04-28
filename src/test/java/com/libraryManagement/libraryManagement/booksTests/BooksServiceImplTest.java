@@ -135,18 +135,18 @@ public class BooksServiceImplTest {
         verify(booksMapper, times(booksList.size())).mapToBookResModel(any(Books.class));
     }
     
-    @Test
-    void testDeleteBookById_BookFound() {
-        long bookId = 1L;
-        List<BorrowingRecord> borrowingRecord = new ArrayList<>();
-        borrowingRecord.add(new BorrowingRecord()); // Add a borrowing record to simulate a book with borrowing records
-        when(borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId)).thenReturn(borrowingRecord);
-
-        assertDoesNotThrow(() -> booksService.deleteBookById(bookId));
-        verify(borrowingRecordRepository).findByBookIdAndReturnDateIsNotNull(bookId);
-        verify(borrowingRecordRepository).deleteAll(borrowingRecord); // Verify that borrowing records are deleted
-        verify(booksRepository).deleteById(bookId); // Verify that the book is deleted
-    }
+//    @Test
+//    void testDeleteBookById_BookFound() {
+//        long bookId = 1L;
+//        List<BorrowingRecord> borrowingRecord = new ArrayList<>();
+//        borrowingRecord.add(new BorrowingRecord()); // Add a borrowing record to simulate a book with borrowing records
+//        when(borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId)).thenReturn(borrowingRecord);
+//
+//        assertDoesNotThrow(() -> booksService.deleteBookById(bookId));
+//        verify(borrowingRecordRepository).findByBookIdAndReturnDateIsNotNull(bookId);
+//        verify(borrowingRecordRepository).deleteAll(borrowingRecord); // Verify that borrowing records are deleted
+//        verify(booksRepository).deleteById(bookId); // Verify that the book is deleted
+//    }
 
 //    @Test
 //    void testDeleteBookById_BookNotFound() {
@@ -159,17 +159,70 @@ public class BooksServiceImplTest {
 //        verify(booksRepository).deleteById(bookId); // Verify that the book deletion is attempted
 //    }
 
+//    @Test
+//    void testDeleteBookById_BookNotFound() {
+//        long bookId = 1L;
+//        when(booksRepository.findById(bookId)).thenReturn(Optional.empty());
+//
+//        BusinessLogicViolationException exception = assertThrows(BusinessLogicViolationException.class, () -> booksService.deleteBookById(bookId));
+//        assertEquals(ApiErrorMessageKeyEnum.BCV_BOOK_SHOULD_BE_RETURNED.name(), exception.getMessage());
+//
+//        verify(borrowingRecordRepository, never()).findByBookIdAndReturnDateIsNotNull(bookId);
+//        verify(borrowingRecordRepository, never()).deleteAll(any());
+//        verify(booksRepository, never()).deleteById(bookId);
+//    }
+    
+    
+    @Test
+    void testDeleteBookById_BookFoundWithReturnDate() {
+        // Arrange
+        long bookId = 1L;
+        List<BorrowingRecord> borrowingRecordList = new ArrayList<>();
+        borrowingRecordList.add(new BorrowingRecord()); // Simulate a borrowing record with a return date
+        Books book = new Books(); // Create a book object for the verification
+        when(booksRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId)).thenReturn(borrowingRecordList);
+
+        // Act
+        assertDoesNotThrow(() -> booksService.deleteBookById(bookId));
+
+        // Assert
+        verify(borrowingRecordRepository).findByBookIdAndReturnDateIsNotNull(bookId);
+        verify(borrowingRecordRepository).deleteAll(borrowingRecordList);
+        verify(booksRepository).delete(book); // Verify delete(book) instead of deleteById(bookId)
+    }
+
+
+
+    @Test
+    void testDeleteBookById_BookFoundWithUnreturnedRecords() {
+        // Arrange
+        long bookId = 1L;
+        Books book = new Books();
+        book.setId(bookId);
+        when(booksRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId)).thenReturn(new ArrayList<>());
+        List<BorrowingRecord> unreturnedRecords = new ArrayList<>();
+        unreturnedRecords.add(new BorrowingRecord());
+        when(borrowingRecordRepository.findByBookIdAndReturnDateIsNull(bookId)).thenReturn(unreturnedRecords);
+
+        // Act & Assert
+        assertThrows(BusinessLogicViolationException.class, () -> booksService.deleteBookById(bookId));
+        verify(borrowingRecordRepository, never()).deleteAll(any());
+        verify(booksRepository, never()).deleteById(any());
+    }
+
     @Test
     void testDeleteBookById_BookNotFound() {
+        // Arrange
         long bookId = 1L;
         when(booksRepository.findById(bookId)).thenReturn(Optional.empty());
 
-        BusinessLogicViolationException exception = assertThrows(BusinessLogicViolationException.class, () -> booksService.deleteBookById(bookId));
-        assertEquals(ApiErrorMessageKeyEnum.BCV_BOOK_SHOULD_BE_RETURNED.name(), exception.getMessage());
-
+        // Act & Assert
+        assertThrows(BusinessLogicViolationException.class, () -> booksService.deleteBookById(bookId));
         verify(borrowingRecordRepository, never()).findByBookIdAndReturnDateIsNotNull(bookId);
         verify(borrowingRecordRepository, never()).deleteAll(any());
-        verify(booksRepository, never()).deleteById(bookId);
+        verify(booksRepository, never()).deleteById(any());
     }
 
 

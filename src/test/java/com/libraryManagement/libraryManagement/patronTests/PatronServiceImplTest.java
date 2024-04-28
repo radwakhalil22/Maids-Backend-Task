@@ -2,6 +2,9 @@ package com.libraryManagement.libraryManagement.patronTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Sort;
 
 import com.libraryManagement.libraryManagement.borrowingRecord.entites.BorrowingRecord;
 import com.libraryManagement.libraryManagement.borrowingRecord.repositories.BorrowingRecordRepository;
+import com.libraryManagement.libraryManagement.exceptions.ApiErrorMessageKeyEnum;
 import com.libraryManagement.libraryManagement.exceptions.BusinessLogicViolationException;
 import com.libraryManagement.libraryManagement.patron.entities.Patron;
 import com.libraryManagement.libraryManagement.patron.models.mapinterface.PatronMapper;
@@ -47,7 +51,6 @@ public class PatronServiceImplTest {
 
     @Test
     void testCreatePatron() {
-        // Arrange
         PatronReqModel patronReqModel = new PatronReqModel();
         Patron patron = new Patron();
         PatronResModel expected = new PatronResModel();
@@ -55,10 +58,8 @@ public class PatronServiceImplTest {
         when(patronRepository.save(patron)).thenReturn(patron);
         when(patronMapper.mapToPatronResModel(patron)).thenReturn(expected);
 
-        // Act
         PatronResModel actual = patronService.createPatron(patronReqModel);
 
-        // Assert
         assertEquals(expected, actual);
         verify(patronMapper).mapToPatron(patronReqModel);
         verify(patronRepository).save(patron);
@@ -67,17 +68,14 @@ public class PatronServiceImplTest {
 
     @Test
     void testGetPatronById() {
-        // Arrange
         long patronId = 1L;
         Patron patron = new Patron();
         PatronResModel expected = new PatronResModel();
         when(patronRepository.findById(patronId)).thenReturn(Optional.of(patron));
         when(patronMapper.mapToPatronResModel(patron)).thenReturn(expected);
 
-        // Act
         PatronResModel actual = patronService.getPatronById(patronId);
 
-        // Assert
         assertEquals(expected, actual);
         verify(patronRepository).findById(patronId);
         verify(patronMapper).mapToPatronResModel(patron);
@@ -85,7 +83,6 @@ public class PatronServiceImplTest {
 
     @Test
     void testUpdatePatronById() {
-        // Arrange
         long patronId = 1L;
         PatronReqModel patronReqModel = new PatronReqModel();
         Patron patron = new Patron();
@@ -95,10 +92,8 @@ public class PatronServiceImplTest {
         when(patronMapper.mapToPatron(patron, patronReqModel)).thenReturn(patron);
         when(patronMapper.mapToPatronResModel(patron)).thenReturn(expected);
 
-        // Act
         PatronResModel actual = patronService.updatePatronById(patronReqModel, patronId);
 
-        // Assert
         assertEquals(expected, actual);
         verify(patronRepository).findById(patronId);
         verify(patronRepository).save(patron);
@@ -130,10 +125,8 @@ public class PatronServiceImplTest {
         when(patronMapper.mapToPatronResModel(patron1)).thenReturn(new PatronResModel());
         when(patronMapper.mapToPatronResModel(patron2)).thenReturn(new PatronResModel());
 
-        // Act
         List<PatronResModel> actual = patronService.getAllPatrons(pageSize, pageIndex, sortField, sortOrder);
 
-        // Assert
         assertEquals(expected.size(), actual.size());
         for (int i = 0; i < expected.size(); i++) {
             assertEquals(expected.get(i), actual.get(i));
@@ -142,34 +135,58 @@ public class PatronServiceImplTest {
         verify(patronMapper).mapToPatronResModel(patron1);
         verify(patronMapper).mapToPatronResModel(patron2);
     }
+    
+    @Test
+    void testDeletePatronById_PatronFoundWithReturnDate() {
+        long patronId = 1L;
+        List<BorrowingRecord> borrowingRecordList = new ArrayList<>();
+        borrowingRecordList.add(new BorrowingRecord());
+        Patron patron = new Patron();
+        when(patronRepository.findById(patronId)).thenReturn(Optional.of(patron));
+        when(borrowingRecordRepository.findByPatronIdAndReturnDateIsNotNull(patronId)).thenReturn(borrowingRecordList);
+
+        try {
+            patronService.deletePatronById(patronId);
+        } catch (BusinessLogicViolationException e) {
+            System.out.println("Unexpected exception: " + e.getMessage());
+        }
+
+        verify(borrowingRecordRepository).findByPatronIdAndReturnDateIsNotNull(patronId);
+        verify(borrowingRecordRepository).deleteAll(borrowingRecordList);
+        verify(patronRepository).delete(patron);
+    }
 
     @Test
-    void testDeletePatronById_PatronFound() {
-        // Arrange
+    void testDeletePatronById_PatronFoundWithUnreturnedRecords() {
         long patronId = 1L;
-        List<BorrowingRecord> borrowingRecord = new ArrayList<>();
-        when(borrowingRecordRepository.findByPatronIdAndReturnDateIsNotNull(patronId)).thenReturn(borrowingRecord);
-        when(patronRepository.existsById(patronId)).thenReturn(true);
+        Patron patron = new Patron();
+        patron.setId(patronId);
+        when(patronRepository.findById(patronId)).thenReturn(Optional.of(patron));
+        when(borrowingRecordRepository.findByPatronIdAndReturnDateIsNotNull(patronId)).thenReturn(new ArrayList<>());
+        List<BorrowingRecord> unreturnedRecords = new ArrayList<>();
+        unreturnedRecords.add(new BorrowingRecord());
+        when(borrowingRecordRepository.findByPatronIdAndReturnDateIsNull(patronId)).thenReturn(unreturnedRecords);
 
-        // Act
-        patronService.deletePatronById(patronId);
-
-        // Assert
-        verify(borrowingRecordRepository).findByPatronIdAndReturnDateIsNotNull(patronId);
-        verify(borrowingRecordRepository).deleteAll(borrowingRecord);
-        verify(patronRepository).deleteById(patronId);
+        BusinessLogicViolationException exception = assertThrows(BusinessLogicViolationException.class, () -> patronService.deletePatronById(patronId));
+        if (!exception.getMessage().equals(ApiErrorMessageKeyEnum.BCV_PATRON_HAS_UNRETURNED_BOOKS.name())) {
+            System.out.println("Unexpected exception message: " + exception.getMessage());
+        }
+        verify(borrowingRecordRepository, never()).deleteAll(anyList());
+        verify(patronRepository, never()).delete(any(Patron.class));
     }
 
     @Test
     void testDeletePatronById_PatronNotFound() {
-        // Arrange
         long patronId = 1L;
-        when(patronRepository.existsById(patronId)).thenReturn(false);
+        when(patronRepository.findById(patronId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(BusinessLogicViolationException.class, () -> patronService.deletePatronById(patronId));
-        verify(borrowingRecordRepository).findByPatronIdAndReturnDateIsNotNull(patronId);
-        verify(patronRepository).existsById(patronId);
+        BusinessLogicViolationException exception = assertThrows(BusinessLogicViolationException.class, () -> patronService.deletePatronById(patronId));
+        if (!exception.getMessage().equals(ApiErrorMessageKeyEnum.BCV_PATRON_NOT_FOUND.name())) {
+            System.out.println("Unexpected exception message: " + exception.getMessage());
+        }
+        verify(borrowingRecordRepository, never()).findByPatronIdAndReturnDateIsNotNull(patronId);
+        verify(borrowingRecordRepository, never()).deleteAll(anyList());
+        verify(patronRepository, never()).delete(any(Patron.class));
     }
 
 }

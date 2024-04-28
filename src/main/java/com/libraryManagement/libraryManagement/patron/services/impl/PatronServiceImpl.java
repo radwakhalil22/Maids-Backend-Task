@@ -1,6 +1,7 @@
 package com.libraryManagement.libraryManagement.patron.services.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,6 @@ public class PatronServiceImpl implements PatronService {
 	@Override
 	public PatronResModel getPatronById(Long patronId) {
 		PatronResModel patronResModel = new PatronResModel();
-//		clientRepo.findById(clientId).get();
 		patronResModel = patronMapper.mapToPatronResModel(patronRepository.findById(patronId).get());
 		return patronResModel;
 	}
@@ -86,14 +86,26 @@ public class PatronServiceImpl implements PatronService {
 	
 	@Override
 	public void deletePatronById(Long patronId) {
-		List<BorrowingRecord> borrowingRecord = borrowingRecordRepository.findByPatronIdAndReturnDateIsNotNull(patronId);
-		if(!borrowingRecord.isEmpty()) {
-			borrowingRecordRepository.deleteAll(borrowingRecord);
-			patronRepository.deleteById(patronId);
-		}
-		else {
-        	throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_PATRON_MUST_RETURN_ALL_BOOKS.name());
-		}
+	    Optional<Patron> optionalPatron = patronRepository.findById(patronId);
+	    if (optionalPatron.isPresent()) {
+	        Patron patron = optionalPatron.get();
+	        List<BorrowingRecord> borrowingRecords = borrowingRecordRepository.findByPatronIdAndReturnDateIsNotNull(patronId);
+	        if (!borrowingRecords.isEmpty()) {
+	            borrowingRecordRepository.deleteAll(borrowingRecords);
+	            patronRepository.delete(patron);
+	        } else {
+	            List<BorrowingRecord> unreturnedRecords = borrowingRecordRepository.findByPatronIdAndReturnDateIsNull(patronId);
+	            if (!unreturnedRecords.isEmpty()) {
+	                throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_PATRON_HAS_UNRETURNED_BOOKS.name());
+	            } else {
+	                patronRepository.delete(patron);
+	            }
+	        }
+	    } else {
+	        throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_PATRON_NOT_FOUND.name());
+	    }
 	}
+
+
 
 }

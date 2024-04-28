@@ -59,10 +59,10 @@ public class PatronController {
 //	@ApiOperation("get all patrons")
 	@GetMapping
 	public ResponseEntity<List<PatronResModel>> getAllPatrons(
-			@RequestParam Integer pageSize,
-			@RequestParam Integer pageIndex,
-			@RequestParam String sortField, 
-			@RequestParam String sortOrder) {
+			@RequestParam(defaultValue = "10", required = false)  Integer pageSize,
+			@RequestParam(defaultValue = "0", required = false)  Integer pageIndex,
+			@RequestParam(required = false) String sortField, 
+			@RequestParam(required = false) String sortOrder) {
 		return new ResponseEntity<>(patronService.getAllPatrons(pageSize,pageIndex,sortField,sortOrder), 
 				HttpStatus.OK);
 		

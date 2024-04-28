@@ -16,5 +16,6 @@ public interface BorrowingRecordRepository extends CrudRepository<BorrowingRecor
 	List<BorrowingRecord> findByBookIdAndReturnDateIsNull(Long bookId);
 	
 	List<BorrowingRecord> findByPatronIdAndReturnDateIsNotNull(Long patronId);
+	List<BorrowingRecord> findByPatronIdAndReturnDateIsNull(Long patronId);
 
 }

@@ -92,32 +92,17 @@ public class BooksServiceImpl implements BooksService {
 			List<BorrowingRecord> borrowingRecords = borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId);
 			if (!borrowingRecords.isEmpty()) {
 				borrowingRecordRepository.deleteAll(borrowingRecords);
-				booksRepository.deleteById(bookId);
+				booksRepository.delete(book);
 			} else {
 				List<BorrowingRecord> unreturnedRecords = borrowingRecordRepository.findByBookIdAndReturnDateIsNull(bookId);
 				if (!unreturnedRecords.isEmpty()) {
 					throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_BOOK_SHOULD_BE_RETURNED.name());
 				} else {
-					booksRepository.deleteById(bookId);
+					booksRepository.delete(book);
 				}
 			}
 		} else {
-			booksRepository.deleteById(bookId);
+			throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_BOOK_NOT_FOUND.name());
 			}
 		}
-//		Books book = booksRepository.findById(bookId).get();
-//		List<BorrowingRecord> borrowingRecord = borrowingRecordRepository.findByBookIdAndReturnDateIsNotNull(bookId);
-//		if(book != null && !borrowingRecord.isEmpty()) {
-//			borrowingRecordRepository.deleteAll(borrowingRecord);
-//			booksRepository.deleteById(bookId);
-//		}
-//		else if(book != null && !borrowingRecordRepository.findByBookIdAndReturnDateIsNull(bookId).isEmpty()) {
-//        	throw new BusinessLogicViolationException(ApiErrorMessageKeyEnum.BCV_BOOK_SHOULD_BE_RETURNED.name());
-//		}else {
-//			
-//			booksRepository.deleteById(bookId);
-//		}
-//	}
-
-	
 }
