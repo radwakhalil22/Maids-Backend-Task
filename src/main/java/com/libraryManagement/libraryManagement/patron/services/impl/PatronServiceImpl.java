@@ -42,7 +42,7 @@ public class PatronServiceImpl implements PatronService {
 	
 	@Override
 	@Transactional
-	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.getAllPatrons",allEntries=true)
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.methodName",allEntries=true)
 	public PatronResModel createPatron(PatronReqModel patronReqModel) {
 	    Patron patron = patronMapper.mapToPatron(patronReqModel);
 	    patron = patronRepository.save(patron);
@@ -60,7 +60,7 @@ public class PatronServiceImpl implements PatronService {
 	
 	@Override
 	@Transactional
-	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.updatePatronById",allEntries=true)
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.methodName",allEntries=true)
 	public PatronResModel updatePatronById(PatronReqModel patronReqModel , Long patronId) {
 		PatronResModel patronResModel = new PatronResModel();
 		Patron patron = patronRepository.findById(patronId).get();
@@ -72,7 +72,7 @@ public class PatronServiceImpl implements PatronService {
 	
 	
 	@Override
-	@Cacheable(value="getAllPatrons", key="#root.getAllPatrons")
+	@Cacheable(value="getAllPatrons", key="#root.methodName")
 	public List<PatronResModel> getAllPatrons(Integer pageSize, Integer pageIndex, String sortField, String sortOrder) {
 	    Pageable pageable = null;
 	    if (sortField != null && !sortField.isBlank() && sortOrder != null && !sortOrder.isBlank()) {
@@ -92,7 +92,7 @@ public class PatronServiceImpl implements PatronService {
 	}
 	
 	@Override
-	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.deletePatronById",allEntries=true)
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.methodName",allEntries=true)
 	public void deletePatronById(Long patronId) {
 	    Optional<Patron> optionalPatron = patronRepository.findById(patronId);
 	    if (optionalPatron.isPresent()) {

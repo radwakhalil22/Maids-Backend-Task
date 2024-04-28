@@ -42,7 +42,7 @@ public class BooksServiceImpl implements BooksService {
 	
 	@Override
 	@Transactional
-	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.getAllBooks",allEntries=true)
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.methodName",allEntries=true)
 	public BookResModel createBook(BookReqModel bookReqModel) {
 	    Books book = booksMapper.mapToBooks(bookReqModel);
 	    book = booksRepository.save(book);
@@ -60,7 +60,7 @@ public class BooksServiceImpl implements BooksService {
 	
 	@Override
 	@Transactional
-	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.updateBookById",allEntries=true)
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.methodName",allEntries=true)
 	public BookResModel updateBookById(BookReqModel bookReqModel , Long bookId) {
 		BookResModel bookResModel = new BookResModel();
 		Books book = booksRepository.findById(bookId).get();
@@ -72,7 +72,7 @@ public class BooksServiceImpl implements BooksService {
 	
 	
 	@Override
-	@Cacheable(value="getAllBooks", key="#root.getAllBooks")
+	@Cacheable(value="getAllBooks", key="#root.methodName")
 	public List<BookResModel> getAllBooks(Integer pageSize, Integer pageIndex, String sortField, String sortOrder) {
 	    Pageable pageable = null;
 	    if (sortField != null && !sortField.isBlank() && sortOrder != null && !sortOrder.isBlank()) {
@@ -92,7 +92,7 @@ public class BooksServiceImpl implements BooksService {
 	}
 	
 	@Override
-	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.deleteBookById",allEntries=true)
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.methodName",allEntries=true)
 	public void deleteBookById(Long bookId) {
 		Optional<Books> optionalBook = booksRepository.findById(bookId);
 		if (optionalBook.isPresent()) {
