@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.libraryManagement.libraryManagement.borrowingRecord.models.response.BorrowingRecordResModel;
 import com.libraryManagement.libraryManagement.borrowingRecord.services.BorrowingRecordService;
 
+import io.swagger.annotations.ApiOperation;
+
 @RequestMapping("/api/borrow/{bookId}/patron/{patronId}")
 
 @RestController
@@ -20,7 +22,7 @@ public class BorrowingRecordController {
 	@Autowired 
 	private BorrowingRecordService BorrowingRecordService;
 	
-//    @ApiOperation("Allow a patron to borrow a book")
+    @ApiOperation("Allow a patron to borrow a book")
     @PostMapping
     public ResponseEntity<BorrowingRecordResModel> borrowBook(
     		@PathVariable Long bookId, @PathVariable Long patronId) {
@@ -28,7 +30,7 @@ public class BorrowingRecordController {
         		,HttpStatus.OK);
     }
 
-//    @ApiOperation("Record the return of a borrowed book by a patron")
+    @ApiOperation("Record the return of a borrowed book by a patron")
     @PutMapping
     public ResponseEntity<BorrowingRecordResModel> returnBook(
     		@PathVariable Long bookId, @PathVariable Long patronId) {

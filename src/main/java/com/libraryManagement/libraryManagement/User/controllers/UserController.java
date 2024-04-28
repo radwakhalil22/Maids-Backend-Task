@@ -11,6 +11,7 @@ import com.libraryManagement.libraryManagement.User.model.request.Authentication
 import com.libraryManagement.libraryManagement.User.model.response.AuthenticationResModel;
 import com.libraryManagement.libraryManagement.User.serviceImpl.UserServiceImpl;
 
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,12 +21,15 @@ public class UserController {
 	@Autowired
 	 UserServiceImpl userService;
 	
+	  @ApiOperation("create a new user")
 	  @PostMapping("/register")
 	  public ResponseEntity<AuthenticationResModel> register(
 	      @RequestBody AuthenticationRequestModel request
 	  ) {
 	    return ResponseEntity.ok(userService.register(request));
 	  }
+	  
+	  @ApiOperation("authenticate a user")
 	  @PostMapping("/authenticate")
 	  public ResponseEntity<AuthenticationResModel> authenticate(
 	      @RequestBody AuthenticationRequestModel request

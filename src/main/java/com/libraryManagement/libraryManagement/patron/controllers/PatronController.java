@@ -19,6 +19,7 @@ import com.libraryManagement.libraryManagement.patron.models.request.PatronReqMo
 import com.libraryManagement.libraryManagement.patron.models.response.PatronResModel;
 import com.libraryManagement.libraryManagement.patron.services.PatronService;
 
+import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
 
 @RequestMapping("/api/patrons")
@@ -29,7 +30,7 @@ public class PatronController {
 	private PatronService patronService;
 	
 	
-//	@ApiOperation("create patron")
+	@ApiOperation("create patron")
 	@PostMapping
 	public ResponseEntity<PatronResModel> createPatron(@Valid @RequestBody PatronReqModel patronReqModel) {
 		return new ResponseEntity<>(patronService.createPatron(patronReqModel), 
@@ -38,7 +39,7 @@ public class PatronController {
 	}
 	
 
-//	@ApiOperation("get patron by id")
+	@ApiOperation("get patron by id")
 	@GetMapping("/{id}")
 	public ResponseEntity<PatronResModel> getPatronById(
 			@PathVariable("id") Long patronId) {
@@ -46,7 +47,7 @@ public class PatronController {
 				HttpStatus.OK);
 	}
 	
-//	@ApiOperation("get patron by id")
+	@ApiOperation("get patron by id")
 	@PutMapping("/{id}")
 	public ResponseEntity<PatronResModel> updatePatronById(
 			@Valid @RequestBody PatronReqModel patronReqModel,
@@ -56,7 +57,7 @@ public class PatronController {
 	}
 	
 	
-//	@ApiOperation("get all patrons")
+	@ApiOperation("get all patrons")
 	@GetMapping
 	public ResponseEntity<List<PatronResModel>> getAllPatrons(
 			@RequestParam(defaultValue = "10", required = false)  Integer pageSize,
@@ -69,7 +70,7 @@ public class PatronController {
 	}
 	
 	
-//	@ApiOperation("delete patron by id")
+	@ApiOperation("delete patron by id")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deletePatronById(
 			@PathVariable("id") Long patronId) {

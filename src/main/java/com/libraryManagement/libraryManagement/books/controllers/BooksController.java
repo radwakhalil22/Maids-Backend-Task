@@ -19,6 +19,7 @@ import com.libraryManagement.libraryManagement.books.models.request.BookReqModel
 import com.libraryManagement.libraryManagement.books.models.response.BookResModel;
 import com.libraryManagement.libraryManagement.books.services.BooksService;
 
+import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
 
 @RequestMapping("/api/books")
@@ -29,7 +30,7 @@ public class BooksController {
 	@Autowired 
 	private BooksService booksService;
 	
-//	@ApiOperation("create book")
+	@ApiOperation("create book")
 	@PostMapping
 	public ResponseEntity<BookResModel> createBook(@Valid @RequestBody BookReqModel bookReqModel) {
 		return new ResponseEntity<>(booksService.createBook(bookReqModel), 
@@ -38,7 +39,7 @@ public class BooksController {
 	}
 	
 
-//	@ApiOperation("get book by id")
+	@ApiOperation("get book by id")
 	@GetMapping("/{id}")
 	public ResponseEntity<BookResModel> getBookById(
 			@PathVariable("id") Long bookId) {
@@ -46,7 +47,7 @@ public class BooksController {
 				HttpStatus.OK);
 	}
 	
-//	@ApiOperation("get book by id")
+	@ApiOperation("get book by id")
 	@PutMapping("/{id}")
 	public ResponseEntity<BookResModel> updateBookById(
 			@Valid @RequestBody BookReqModel bookReqModel,
@@ -56,7 +57,7 @@ public class BooksController {
 	}
 	
 	
-//	@ApiOperation("get all books")
+	@ApiOperation("get all books") 
 	@GetMapping
 	public ResponseEntity<List<BookResModel>> getAllBooks(
 			@RequestParam(defaultValue = "10",required = false)  Integer pageSize,
@@ -69,7 +70,7 @@ public class BooksController {
 	}
 	
 	
-//	@ApiOperation("delete book by id")
+	@ApiOperation("delete book by id")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteBookById(
 			@PathVariable("id") Long bookId) {
