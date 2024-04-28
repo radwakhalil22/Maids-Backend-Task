@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,7 @@ public class PatronServiceImpl implements PatronService {
 	
 	@Override
 	@Transactional
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.getAllPatrons",allEntries=true)
 	public PatronResModel createPatron(PatronReqModel patronReqModel) {
 	    Patron patron = patronMapper.mapToPatron(patronReqModel);
 	    patron = patronRepository.save(patron);
@@ -48,6 +51,7 @@ public class PatronServiceImpl implements PatronService {
 	}
 
 	@Override
+	@Cacheable(value="getPatronById", key="#patronId")
 	public PatronResModel getPatronById(Long patronId) {
 		PatronResModel patronResModel = new PatronResModel();
 		patronResModel = patronMapper.mapToPatronResModel(patronRepository.findById(patronId).get());
@@ -55,6 +59,8 @@ public class PatronServiceImpl implements PatronService {
 	}
 	
 	@Override
+	@Transactional
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.updatePatronById",allEntries=true)
 	public PatronResModel updatePatronById(PatronReqModel patronReqModel , Long patronId) {
 		PatronResModel patronResModel = new PatronResModel();
 		Patron patron = patronRepository.findById(patronId).get();
@@ -66,6 +72,7 @@ public class PatronServiceImpl implements PatronService {
 	
 	
 	@Override
+	@Cacheable(value="getAllPatrons", key="#root.getAllPatrons")
 	public List<PatronResModel> getAllPatrons(Integer pageSize, Integer pageIndex, String sortField, String sortOrder) {
 	    Pageable pageable = null;
 	    if (sortField != null && !sortField.isBlank() && sortOrder != null && !sortOrder.isBlank()) {
@@ -85,6 +92,7 @@ public class PatronServiceImpl implements PatronService {
 	}
 	
 	@Override
+	@CacheEvict(value= {"getPatronById","getAllPatrons"},key="#root.deletePatronById",allEntries=true)
 	public void deletePatronById(Long patronId) {
 	    Optional<Patron> optionalPatron = patronRepository.findById(patronId);
 	    if (optionalPatron.isPresent()) {

@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,7 @@ public class BooksServiceImpl implements BooksService {
 	
 	@Override
 	@Transactional
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.getAllBooks",allEntries=true)
 	public BookResModel createBook(BookReqModel bookReqModel) {
 	    Books book = booksMapper.mapToBooks(bookReqModel);
 	    book = booksRepository.save(book);
@@ -48,6 +51,7 @@ public class BooksServiceImpl implements BooksService {
 	}
 
 	@Override
+	@Cacheable(value="getBookById", key="#bookId")
 	public BookResModel getBookById(Long bookId) {
 		BookResModel bookResModel = new BookResModel();
 		bookResModel = booksMapper.mapToBookResModel(booksRepository.findById(bookId).get());
@@ -55,6 +59,8 @@ public class BooksServiceImpl implements BooksService {
 	}
 	
 	@Override
+	@Transactional
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.updateBookById",allEntries=true)
 	public BookResModel updateBookById(BookReqModel bookReqModel , Long bookId) {
 		BookResModel bookResModel = new BookResModel();
 		Books book = booksRepository.findById(bookId).get();
@@ -66,6 +72,7 @@ public class BooksServiceImpl implements BooksService {
 	
 	
 	@Override
+	@Cacheable(value="getAllBooks", key="#root.getAllBooks")
 	public List<BookResModel> getAllBooks(Integer pageSize, Integer pageIndex, String sortField, String sortOrder) {
 	    Pageable pageable = null;
 	    if (sortField != null && !sortField.isBlank() && sortOrder != null && !sortOrder.isBlank()) {
@@ -85,6 +92,7 @@ public class BooksServiceImpl implements BooksService {
 	}
 	
 	@Override
+	@CacheEvict(value= {"getBookById","getAllBooks"},key="#root.deleteBookById",allEntries=true)
 	public void deleteBookById(Long bookId) {
 		Optional<Books> optionalBook = booksRepository.findById(bookId);
 		if (optionalBook.isPresent()) {
